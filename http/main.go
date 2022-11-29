@@ -7,6 +7,15 @@ import (
 	"os"
 )
 
+type logWriter struct{}
+
+// As logWriter implements Write, it implements the Writer interface.
+func (logWriter) Write(bs []byte) (int, error) {
+	fmt.Println(string(bs))
+	fmt.Printf("Escrevi %v bytes.\n", len(bs))
+	return len(bs), nil
+}
+
 func main() {
 	//resp, err := http.Get("https://google.com")
 	resp, err := http.Get("https://httpbin.org/get")
@@ -28,5 +37,6 @@ func main() {
 
 	// fmt.Println(string(contentBody))
 
-	io.Copy(os.Stdout, resp.Body)
+	lw := logWriter{}
+	io.Copy(lw, resp.Body)
 }
