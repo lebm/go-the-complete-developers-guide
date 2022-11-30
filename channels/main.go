@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"sync"
 )
 
 func main() {
@@ -15,9 +16,18 @@ func main() {
 		"https://go.dev",
 	}
 
+	var wg sync.WaitGroup
+
 	for _, link := range links {
-		go checkLink(link)
+		wg.Add(1)
+		l := link
+		go func() {
+			defer wg.Done()
+			checkLink(l)
+		}()
 	}
+
+	wg.Wait()
 }
 
 func checkLink(link string) {
