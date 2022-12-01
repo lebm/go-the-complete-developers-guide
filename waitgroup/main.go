@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
+	"sync"
 )
 
 func main() {
@@ -14,32 +14,29 @@ func main() {
 		"https://amazon.com",
 		"https://github.com",
 		"https://go.dev",
-		"https://httpbin.org/",
 	}
 
-	c := make(chan string)
+	var wg sync.WaitGroup
 
 	for _, link := range links {
-		go checkLink(link, c)
+		wg.Add(1)
+		l := link
+		go func() {
+			defer wg.Done()
+			checkLink(l)
+		}()
 	}
 
-	for l := range c {
-		go func(link string) {
-			time.Sleep(5 * time.Second)
-			go checkLink(link, c)
-		}(l)
-	}
-
+	wg.Wait()
 }
 
-func checkLink(link string, c chan string) {
+func checkLink(link string) {
 	//http.Get() is a blocking call.
 	_, err := http.Get(link)
 	if err != nil {
-		fmt.Printf("%s Might be down I think\n", link)
-		c <- link
+		fmt.Println(link, " might be down!")
 		return
 	}
-	fmt.Printf("Yep, %s its up.\n", link)
-	c <- link
+	fmt.Println(link, "is up!")
+	//	fmt.Println(resp)
 }
